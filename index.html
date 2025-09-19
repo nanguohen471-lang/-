@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>生命探索測驗 · 宇宙卷軸 v6（方案B）</title>
+  <link rel="stylesheet" href="styles.css" />
+
+<style>.volume-wrap{display:none!important}</style>
+
+<style>
+  /* === 基礎設定 === */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: "Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+    color: #e9eef6;
+    background: radial-gradient(1200px 800px at 10% 10%, rgba(255,255,255,0.12), transparent 60%),
+                radial-gradient(1000px 700px at 90% 20%, rgba(255,255,255,0.08), transparent 60%),
+                linear-gradient(120deg, #0f1226, #0b1638 40%, #0d1a4d 70%, #0a1230);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* 動態柔彩雲氣 */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -20vmax;
+    background: radial-gradient(closest-side, rgba(255,154,158,0.10), transparent 60%) 10% 20% / 50vmax 50vmax no-repeat,
+                radial-gradient(closest-side, rgba(250,208,196,0.12), transparent 60%) 80% 10% / 45vmax 45vmax no-repeat,
+                radial-gradient(closest-side, rgba(206,180,255,0.10), transparent 60%) 70% 70% / 60vmax 60vmax no-repeat,
+                radial-gradient(closest-side, rgba(152,245,255,0.12), transparent 60%) 20% 80% / 55vmax 55vmax no-repeat;
+    filter: blur(35px) saturate(115%);
+    animation: drift 30s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: -1;
+  }
+  @keyframes drift {
+    from { transform: translate3d(-2%, -2%, 0) scale(1); }
+    to   { transform: translate3d(2%, 2%, 0) scale(1.05); }
+  }
+
+  /* 星點紋理 */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.10) 0.8px, transparent 0.8px),
+      radial-gradient(rgba(255,255,255,0.06) 0.8px, transparent 0.8px);
+    background-size: 2px 2px, 3px 3px;
+    background-position: 0 0, 1px 1px;
+    opacity: .35;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* 若你的 script.js 會畫星空，保持這兩層可見但不擋互動 */
+  #space, .nebula {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -2;
+  }
+
+  /* === 內容區 === */
+  section {
+    width: min(960px, 92vw);
+    margin: clamp(24px, 6vh, 72px) auto;
+  }
+
+  /* 開場白與結果做成玻璃卡片風 */
+  #intro, #resultPage {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 18px;
+    padding: clamp(20px, 4vw, 40px);
+    backdrop-filter: blur(12px) saturate(115%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  #intro h1 {
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: .5px;
+    margin: 0 0 16px;
+    font-size: clamp(22px, 3.4vw, 36px);
+  }
+
+  /* 表單卡片 */
+  #formPage .form-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.30);
+    display: grid;
+    gap: 14px;
+  }
+  #formPage label {
+    display: grid;
+    gap: 8px;
+    font-size: 15px;
+  }
+  #formPage input, #formPage select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(0,0,0,0.25);
+    color: #f2f6ff;
+    outline: none;
+  }
+  #formPage input:focus, #formPage select:focus {
+    border-color: #9ec5ff;
+    box-shadow: 0 0 0 4px rgba(158,197,255,0.18);
+  }
+
+  /* 結果卡片容器 */
+  #resultCards {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  #resultCards > * {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  /* === 按鈕樣式 === */
+  .btn-primary, .btn-secondary, .btn-outline, button[type="submit"] {
+    --btn-bg: linear-gradient(135deg,#7aa6ff,#a588ff);
+    --btn-text: #0d122b;
+    --btn-shadow: 0 8px 20px rgba(82,118,255,.35);
+    --btn-border: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5em;
+    padding: 11px 18px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    border-radius: 14px;
+    border: 1px solid var(--btn-border);
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    box-shadow: var(--btn-shadow);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+  }
+  .btn-primary:hover, .btn-secondary:hover, .btn-outline:hover, button[type="submit"]:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
+  .btn-secondary {
+    --btn-bg: linear-gradient(135deg,#9cd3ff,#b9f1ff);
+  }
+  .btn-outline {
+    --btn-bg: transparent;
+    --btn-text: #cfdaff;
+    --btn-border: rgba(255,255,255,0.45);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  }
+
+  /* 連結分享區塊 */
+  #shareSection {
+    margin: 10px 0 0;
+  }
+
+  /* === 音樂控制（僅保留開關）=== */
+  .audio-ui {
+    position: fixed;
+    right: clamp(12px, 2vw, 24px);
+    bottom: clamp(12px, 2vw, 24px);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  }
+  .music-toggle {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(220,235,255,0.85));
+    color: #0e1738;
+    font-size: 22px; /* 讓 emoji 更清楚 */
+    box-shadow: inset 0 0 12px rgba(255,255,255,0.65), 0 8px 24px rgba(0,0,0,0.35);
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+  }
+  .music-toggle:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+  }
+
+  /* 隱藏音量控制（延續你的需求） */
+  .volume-wrap { display: none !important; }
+
+  /* === 其他 === */
+  .hidden { display: none !important; }
+
+  /* 行動裝置調整 */
+  @media (max-width: 480px) {
+    .music-toggle { width: 44px; height: 44px; font-size: 20px; }
+    #resultCards { grid-template-columns: 1fr; }
+  }
+</style>
+
+<style>
+/* === Mobile-first 版面優化 === */
+:root{
+  --radius: 16px;
+  --pad: clamp(14px, 4vw, 18px);
+}
+html, body { height: 100%; }
+body{
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 容器：手機預設滿版 + 左右間距，桌機再放寬 */
+section{
+  width: 100%;
+  max-width: 720px;
+  padding: 0 16px;
+  margin: max(16px, env(safe-area-inset-top)) auto 20px;
+}
+#intro, #resultPage{
+  padding: var(--pad);
+  border-radius: var(--radius);
+}
+#formPage .form-card{
+  padding: var(--pad);
+  border-radius: var(--radius);
+  gap: 12px;
+}
+/* 指尖友善大小 */
+button, .btn-primary, .btn-secondary, .btn-outline, button[type="submit"]{
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+#formPage input, #formPage select, textarea{
+  min-height: 44px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+/* 卡片列表：手機單欄，桌機升級多欄 */
+#resultCards{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+#resultCards > *{
+  border-radius: 12px;
+}
+/* 音樂按鈕：避開瀏海與 Home Indicator */
+.audio-ui{
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+}
+/* 鍵盤彈出時把按鈕往下移，避免遮住輸入框 */
+body.keyboard-open .audio-ui{
+  transform: translateY(80px);
+  opacity: .6;
+  pointer-events: none;
+}
+/* 桌機與平板增強 */
+@media (min-width: 640px){
+  section{ max-width: 860px; }
+  #resultCards{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (min-width: 960px){
+  section{ max-width: 1000px; }
+  #resultCards{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+/* 尊重降低動態設定 */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important; }
+}
+@supports (height: 100dvh){
+  body{ min-height: 100dvh; }
+}
+/* 更清楚的鍵盤/螢幕閱讀器焦點 */
+:focus-visible{
+  outline: 3px solid rgba(158,197,255,0.6);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+</style>
+
+<style>
+/* === 結果卡片調整回原本樣式，稍微縮小 === */
+#resultCards{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+#resultCards > *{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.92rem;
+}
+</style>
+
+<style>
+/* === 結果卡片：手機小、桌機大（響應式）=== */
+#resultCards{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+#resultCards > *{
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.92rem;
+}
+/* 平板 */
+@media (min-width: 640px){
+  #resultCards{
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  #resultCards > *{
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 0.96rem;
+  }
+}
+/* 桌機 */
+@media (min-width: 960px){
+  #resultCards{
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  #resultCards > *{
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 1rem;
+  }
+}
+</style>
+
+<style>
+/* === 操作列：橫向排列（可自動換行） === */
+.actions-row{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.actions-row > *{ margin: 0; }
+
+/* === 重新測驗：強化主動作按鈕 === */
+.btn-retake{
+  --btn-bg: linear-gradient(135deg,#ffb86b,#ff8ba7);
+  --btn-text: #0d122b;
+  --btn-border: rgba(255,255,255,0.55);
+  --btn-glow: 0 10px 28px rgba(255,140,110,.40);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5em;
+  padding: 12px 18px;
+  min-height: 48px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  border-radius: 14px;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  box-shadow: var(--btn-glow);
+  cursor: pointer;
+  position: relative;
+  transition: transform .15s ease, box-shadow .25s ease, filter .25s ease;
+}
+.btn-retake:hover{
+  transform: translateY(-1.5px);
+  filter: brightness(1.05);
+}
+.btn-retake:active{
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+.btn-retake:focus-visible{
+  outline: 3px solid rgba(255,196,120,0.65);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+/* 亮面掃光效果 */
+.btn-retake::before{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(120deg, rgba(255,255,255,0.25), transparent 30%, transparent 70%, rgba(255,255,255,0.20));
+  opacity: 0; pointer-events:none;
+  transition: opacity .25s ease;
+  border-radius: inherit;
+}
+.btn-retake:hover::before{ opacity: .85; }
+
+/* 行動裝置微調：讓兩顆鈕在小螢幕仍保持一行或自然換行 */
+@media (max-width: 420px){
+  .actions-row{ gap: 8px; }
+  .btn-retake{ flex: 1 1 auto; }
+  #shareSection{ flex: 0 0 auto; }
+}
+</style>
+
+<style>
+/* === 將重新測驗與分享按鈕置中顯示 === */
+.actions-row{
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+</style>
+
+<style>
+/* === 讓「重新測驗」與「分享結果」按鈕對稱（等寬）並置中 === */
+.actions-row{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.actions-row > *{ margin: 0; }
+
+/* 等寬：在大多數螢幕維持一致視覺比例 */
+.actions-row .btn-retake,
+.actions-row #shareBtn{
+  width: 180px;          /* 固定等寬，確保對稱 */
+  min-height: 48px;      /* 一致高度 */
+  text-align: center;
+}
+
+/* 小螢幕時一樣對稱，必要時自動換行 */
+@media (max-width: 420px){
+  .actions-row .btn-retake,
+  .actions-row #shareBtn{
+    width: 48%;
+  }
+}
+</style>
+
+<style>
+/* === 修正：兩顆按鈕對齊、等高、等寬、置中 === */
+.actions-row{
+  display: flex;
+  justify-content: center;
+  align-items: stretch;     /* 元件同高 */
+  flex-wrap: wrap;
+  gap: 14px;
+  width: 100%;
+}
+/* 移除 shareSection 的額外邊距，並讓其不干擾彈性排列 */
+.actions-row #shareSection{
+  margin: 0 !important;
+  padding: 0 !important;
+  display: contents;        /* 讓內部按鈕直接成為彈性子元素 */
+}
+
+/* 統一兩顆按鈕的尺寸與排版 */
+.actions-row .btn-retake,
+.actions-row #shareBtn,
+.actions-row .btn-share{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5em;
+  box-sizing: border-box;
+  width: 200px;             /* 等寬 */
+  min-height: 52px;         /* 等高 */
+  padding: 12px 18px;
+  font-size: 16px;
+  line-height: 1;           /* 垂直置中更精準 */
+  font-weight: 800;
+  border-radius: 14px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* 分享按鈕視覺（冷色漸層，與重新測驗暖色互補） */
+.btn-share{
+  --btn-bg: linear-gradient(135deg,#9cd3ff,#b9f1ff);
+  --btn-text: #0d122b;
+  --btn-border: rgba(255,255,255,0.55);
+  --btn-glow: 0 10px 28px rgba(120,170,255,.40);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--btn-border);
+  box-shadow: var(--btn-glow);
+  transition: transform .15s ease, box-shadow .25s ease, filter .25s ease;
+}
+.btn-share:hover{ transform: translateY(-1.5px); filter: brightness(1.05); }
+.btn-share:active{ transform: translateY(0); filter: brightness(0.98); }
+.btn-share:focus-visible{
+  outline: 3px solid rgba(150,210,255,0.65);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+/* 小螢幕時維持對稱，可自動換行 */
+@media (max-width: 420px){
+  .actions-row .btn-retake,
+  .actions-row .btn-share{ width: 48%; min-width: 140px; }
+}
+</style>
+</head>
+<body>
+  <!-- 星空背景 -->
+  <canvas id="space" aria-hidden="true"></canvas>
+  <div class="nebula" aria-hidden="true"></div>
+
+  <!-- 開場白 -->
+  <section id="intro">
+    <h1 id="introText">
+      <span>🌌 每個生日數字，都藏著一段靈魂的旅程…</span>
+      <span>今天，你將展開屬於自己的探索。</span>
+    </h1>
+    <button id="startBtn" class="btn-primary">開始探索</button>
+  </section>
+
+  <!-- 表單 -->
+  <section id="formPage" class="hidden">
+    <form id="testForm" class="form-card">
+      <label>姓名 <input type="text" name="name" required></label>
+      <label>性別
+        <select name="gender" required>
+          <option value="女">女</option>
+          <option value="男">男</option>
+          <option value="其他">其他</option>
+        </select>
+      </label>
+      <label>生日 <input type="date" name="birthday" required></label>
+      <button type="submit" class="btn-primary">開始測驗</button>
+    </form>
+  </section>
+
+  <!-- 結果 -->
+  <section id="resultPage" class="hidden">
+    <h2 id="resultTitle"></h2>
+    <div id="resultCards"></div>
+    <div class="actions-row"><button id="restartBtn" class="btn-retake">🔁 重新測驗</button><div id="shareSection">
+      <button id="shareBtn" class="btn-share">🔗 分享結果</button>
+    </div>
+    </div>
+  </section>
+
+  <!-- 建議：保留原檔名 + 加入 bg.mp3 備援 -->
+<audio id="bgm" preload="auto" loop>
+  <source src="一個人靜靜的聽 心靈音樂[睡眠輕音樂] - Sleep Music 睡眠輕音樂 (youtube).mp3" type="audio/mpeg" />
+  <source src="bg.mp3" type="audio/mpeg" />
+</audio>
+
+
+  <!-- 音樂控制：開關 + 音量 -->
+  <div class="audio-ui">
+    <button id="musicToggle" class="music-toggle" aria-label="音樂開關" title="播放/暫停背景音樂">🔇</button>
+    <div class="volume-wrap" aria-label="音量控制" hidden>
+      <span class="vol-label">音量</span>
+      <input id="volume" type="range" min="0" max="100" step="1" value="35" />
+      <span id="volVal" class="vol-val">35%</span>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+<script>
+(function(){
+  var body = document.body;
+  var lastH = window.innerHeight;
+  var THRESHOLD = 120; // 典型鍵盤高度變化
+  function onResize(){
+    var now = window.innerHeight;
+    if (Math.abs(now - lastH) > THRESHOLD){
+      if (now < lastH) body.classList.add('keyboard-open');
+      else body.classList.remove('keyboard-open');
+      lastH = now;
+    }
+  }
+  window.addEventListener('resize', onResize, {passive:true});
+  document.addEventListener('focusin', function(e){
+    if (e.target.matches('input,textarea,select')) body.classList.add('keyboard-open');
+  }, {passive:true});
+  document.addEventListener('focusout', function(e){
+    if (e.target.matches('input,textarea,select')) body.classList.remove('keyboard-open');
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>
